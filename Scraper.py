@@ -21,7 +21,7 @@ class Scraper:
         if not self.cera_url==None:
             self.driver = webdriver.Chrome()
             self.driver.maximize_window()
-
+            self.driver.implicitly_wait(5)
             self.driver.get(self.cera_url)
             self._savePageSrc("Login_Page",self.driver.page_source)
 
@@ -30,15 +30,16 @@ class Scraper:
 
         if debug == True: return self.driver
         # Switch to the LOG IN tab
-        try:
+
+        if self.driver.find_element_by_link_text("Log In") != None:
             self.driver.find_element_by_link_text("Log In").click()
-        except:
+        else:
             self.driver.find_element_by_link_text("LOG IN").click()
 
         #Search for the respective input form and find the fields to enter email and password and the submit button
         form = self.driver.find_element_by_xpath("//form[@name='login']")
-        email_field = form.find_element_by_xpath("//input[@id='emailInput-input']")
-        pass_field = form.find_element_by_xpath("//input[@id='passwordInput-input']")
+        email_field = form.find_element_by_xpath("//input[@name='email']")
+        pass_field = form.find_element_by_xpath("//input[@name='password']")
         submit_btn = form.find_element_by_tag_name("button")
 
         # Feed email and password to the respective field and submit the form
@@ -46,22 +47,25 @@ class Scraper:
         pass_field.send_keys("Avisek@4326")
         submit_btn.click()
 
-
-        self._click_more_chevron()
-        self._savePageSrc("Home_Page",self.driver.page_source)
-
-        self.driver.find_element_by_link_text("Inactive Courses").click()
-        self._click_more_chevron()
-        time.sleep(2)
-        self._savePageSrc("Inactive_courses_Page",self.driver.page_source)
-
-        self.driver.find_element_by_link_text("Completed Courses").click()
-        self._click_more_chevron()
-        time.sleep(2)
-        self._savePageSrc("Completed_courses_Page",self.driver.page_source)
-
         #Returning Driver for debugging purposes
         return self.driver
+
+    def _get_all_courses(self):
+        self._click_more_chevron()
+        self._savePageSrc("Home_Page", self.driver.page_source)
+
+        self.driver.get(
+            "https://www.coursera.org/?skipBrowseRedirect=true&skipRecommendationsRedirect=true&tab=inactive")
+        self._click_more_chevron()
+        #time.sleep(2)
+        self._savePageSrc("Inactive_courses_Page", self.driver.page_source)
+
+        self.driver.get(
+            "https://www.coursera.org/?skipBrowseRedirect=true&skipRecommendationsRedirect=true&tab=completed")
+        self._click_more_chevron()
+        #time.sleep(2)
+        self._savePageSrc("Completed_courses_Page", self.driver.page_source)
+
 
 
     def search_available_courses(self):
@@ -122,13 +126,17 @@ class Scraper:
 
         tmp_dict = course_hrefs
         section_list = soup.find_all('section', attrs={"class": ["rc-CourseCard", "with-padding"]})
+        modified_section_list = soup.find_all('section',attrs={"class":"rc-CourseCard with-padding card-rich-interaction".split()})
+
+        section_list = section_list+modified_section_list
+
         if len(section_list) == 0: return None
 
         for section in section_list:
 
-            enroll_option = section.find('span', attrs={"class": ["headline-1-text", "enroll-text"]})
+            check_enrollment = section.find('div',attrs={"class":"rc-CourseEnrollButton"})
 
-            if enroll_option == None or enroll_option.text == "Go to Course":
+            if check_enrollment == None:
                 name = section.find('h4', attrs={"class": "headline-1-text"}).text
                 href_link = section.find("a", href=True)['href']
                 tmp_dict[name] = href_link
@@ -151,19 +159,26 @@ class Scraper:
 
         return len(weeks)
 
-    def _get_videos_per_week(self,weeks,course_url):
+    def search_videos_per_week(self,weeks,course_url):
 
         weeks_href = []
         soup_list = []
 
-        for week in range(weeks):
+        for week in range(1,weeks+1):
             week_url = course_url+"week"+week
-            self.driver.get(week_url)
+            self.driver.find_element_by_link_text("Week "+str(week)).click()
             soup_list.append(BeautifulSoup(self.driver.page_source))
+
+        for soup in soup_list:
+            lesson_divs = soup.find_all('div',attrs={'class':'od-lesson-collection-element'})
+
+
+
 
         
 
-
+    def _get_videos(self,soup):
+        pass
 
     def logout(self,close=False):
 
