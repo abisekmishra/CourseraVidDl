@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="4ce97af8-0eed-4f9d-a54e-0ba66ee31d63" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scraper.py" beforeDir="false" afterPath="$PROJECT_DIR$/Scraper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/Completed_courses_Page.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/Home_Page.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/Inactive_courses_Page.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/Login_Page.html" beforeDir="false" />
-    </list>
+    <list default="true" id="4ce97af8-0eed-4f9d-a54e-0ba66ee31d63" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,14 +12,15 @@
     <session id="-1182471047">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="5" />
+          <entry key="project.closed" value="6" />
           <entry key="project.open.time.0" value="1" />
           <entry key="project.open.time.11" value="2" />
           <entry key="project.open.time.12" value="2" />
           <entry key="project.open.time.15" value="1" />
           <entry key="project.open.time.16" value="1" />
           <entry key="project.open.time.28" value="1" />
-          <entry key="project.opened" value="8" />
+          <entry key="project.open.time.8" value="1" />
+          <entry key="project.opened" value="9" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -65,14 +59,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Scraper.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1265">
+            <state relative-caret-position="888">
               <caret line="78" column="75" selection-start-line="78" selection-start-column="75" selection-end-line="78" selection-end-column="75" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
-                <marker date="1535883626833" expanded="true" signature="1948:2575" ph="..." />
-                <marker date="1535883626833" expanded="true" signature="5382:5864" ph="..." />
-                <marker date="1535883626833" expanded="true" signature="6684:6693" ph="..." />
-                <marker date="1535883626833" expanded="true" signature="6684:6703" ph="..." />
               </folding>
             </state>
           </provider>
@@ -311,14 +301,10 @@
     <entry file="file://$PROJECT_DIR$/driver.py" />
     <entry file="file://$PROJECT_DIR$/Scraper.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1265">
+        <state relative-caret-position="888">
           <caret line="78" column="75" selection-start-line="78" selection-start-column="75" selection-end-line="78" selection-end-column="75" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
-            <marker date="1535883626833" expanded="true" signature="1948:2575" ph="..." />
-            <marker date="1535883626833" expanded="true" signature="5382:5864" ph="..." />
-            <marker date="1535883626833" expanded="true" signature="6684:6693" ph="..." />
-            <marker date="1535883626833" expanded="true" signature="6684:6703" ph="..." />
           </folding>
         </state>
       </provider>
