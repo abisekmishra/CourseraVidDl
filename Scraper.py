@@ -31,10 +31,10 @@ class Scraper:
         if debug == True: return self.driver
         # Switch to the LOG IN tab
 
-        if self.driver.find_element_by_link_text("Log In") != None:
-            self.driver.find_element_by_link_text("Log In").click()
-        else:
+        if self.driver.find_element_by_link_text("LOG IN") != None:
             self.driver.find_element_by_link_text("LOG IN").click()
+        else:
+            self.driver.find_element_by_link_text("Log In").click()
 
         #Search for the respective input form and find the fields to enter email and password and the submit button
         form = self.driver.find_element_by_xpath("//form[@name='login']")
@@ -54,16 +54,16 @@ class Scraper:
         self._click_more_chevron()
         self._savePageSrc("Home_Page", self.driver.page_source)
 
-        self.driver.get(
-            "https://www.coursera.org/?skipBrowseRedirect=true&skipRecommendationsRedirect=true&tab=inactive")
+        self.driver.execute_script("window.scrollTo(0,0)")
+        self.driver.find_element_by_link_text('Inactive').click()
         self._click_more_chevron()
-        #time.sleep(2)
+        time.sleep(2)
         self._savePageSrc("Inactive_courses_Page", self.driver.page_source)
 
-        self.driver.get(
-            "https://www.coursera.org/?skipBrowseRedirect=true&skipRecommendationsRedirect=true&tab=completed")
+        self.driver.execute_script("window.scrollTo(0,0)")
+        self.driver.find_element_by_link_text('Completed').click()
         self._click_more_chevron()
-        #time.sleep(2)
+        time.sleep(2)
         self._savePageSrc("Completed_courses_Page", self.driver.page_source)
 
 
@@ -135,8 +135,10 @@ class Scraper:
         for section in section_list:
 
             check_enrollment = section.find('div',attrs={"class":"rc-CourseEnrollButton"})
+            print(check_enrollment)
+            enroll_text = check_enrollment.find('span').text if check_enrollment!=None else 'pass'
 
-            if check_enrollment == None:
+            if check_enrollment == None or enroll_text != 'Enroll':
                 name = section.find('h4', attrs={"class": "headline-1-text"}).text
                 href_link = section.find("a", href=True)['href']
                 tmp_dict[name] = href_link
@@ -149,33 +151,31 @@ class Scraper:
 
         course_url = self.cera_url + self.course_hrefs[course_name]
         self.driver.get(course_url)
-        soup = BeautifulSoup(self.driver.page_source,'html.parser')
 
-        div_weeks = soup.find('div',attrs={'class':'rc-NavigationDrawer'})
-
-        weeks = div_weeks.find_all('a',attrs={'class' : "rc-NavigationDrawerLink headline-1-text horizontal-box \
-                                                   rc-WeekNavigationItem".split()})
 
 
         return len(weeks)
 
-    def search_videos_per_week(self,weeks,course_url):
+    def search_videos_per_week(self,week):
 
-        weeks_href = []
-        soup_list = []
+        lecture_hrefs = {}
 
-        for week in range(1,weeks+1):
-            week_url = course_url+"week"+week
-            self.driver.find_element_by_link_text("Week "+str(week)).click()
-            soup_list.append(BeautifulSoup(self.driver.page_source))
+        #week_url = course_url+"week"+week
+        self.driver.find_element_by_link_text("Week "+str(week)).click()
+        soup = BeautifulSoup((self.driver.page_source),'html.parser')
 
-        for soup in soup_list:
-            lesson_divs = soup.find_all('div',attrs={'class':'od-lesson-collection-element'})
+        lesson_divs = soup.find_all('div',attrs={'class':'rc-NamedItemList'})
+        lessons = [li for li in [div.find_all('li') for div in lesson_divs if div.find('h4').text != 'Review']]
+
+        for lesson in lessons:
+            lecture_name = lesson.find('div',attrs={'class':'rc-WeekItemName headline-1-text'.split()}).text
+            lecture_link = lesson.find('a',href=True)['href']
+
+            if '/lecture/' in lecture_link:lecture_hrefs[lecture_name] = lecture_link
+
+        return lecture_hrefs
 
 
-
-
-        
 
     def _get_videos(self,soup):
         pass
