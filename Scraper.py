@@ -2,6 +2,7 @@ import os
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import time
+import requests
 
 class Scraper:
 
@@ -117,8 +118,8 @@ class Scraper:
     def _get_courses(self,soup,course_hrefs):
 
         tmp_dict = course_hrefs
-        section_list = soup.find_all('section', attrs={"class": ["rc-CourseCard", "with-padding"]})
-        modified_section_list = soup.find_all('section',attrs={"class":"rc-CourseCard with-padding card-rich-interaction".split()})
+        section_list = soup.find_all('section', attrs={"class": "rc-CourseCard with-padding"})
+        modified_section_list = soup.find_all('section',attrs={"class":"rc-CourseCard with-padding card-rich-interaction"})
 
         section_list = list(set(section_list+modified_section_list))
 
@@ -142,7 +143,7 @@ class Scraper:
 
         course_url = self.cera_url + self.course_hrefs[course_name]
         self.driver.get(course_url)
-        soup = BeautifulSoup(driver.page_source,'html.parser')
+        soup = BeautifulSoup(self.driver.page_source,'html.parser')
         div_weeks = soup.find('div',attrs={'class':'rc-NavigationDrawer'})
         weeks = div_weeks.find_all('a',attrs={'class' : "rc-NavigationDrawerLink headline-1-text horizontal-box \
                                                    rc-WeekNavigationItem".split()})
@@ -176,19 +177,24 @@ class Scraper:
             lecture_link = lesson.find('a')['href']
             if "/lecture/" in lecture_link:
                 lecture_name = lesson_div.text
-                lecture_hrefs[(str(c)+". "+lecture_name)] = cera_url + lecture_link
+                lecture_hrefs[(str(c)+". "+lecture_name)] = self.cera_url + lecture_link
                 c+=1
 
         return lecture_hrefs
 
 
-    def _get_videos(self,lecture_hrefs):
+    def _get_videos(self,lecture_hrefs,vid_name=None):
+        if vid_name == None:self._get_allvideos(lecture_hrefs)
+        else: self._download_videos([vid_name,lecture_hrefs[vid_name]])
+
+
+    def _get_allvideos(self,lecture_hrefs):
         vid_links = []
         for key,value in lecture_hrefs.items():
             self.driver.get(value)
             soup = BeautifulSoup(self.driver.page_source)
             vid_links.append([key,soup.find('video').find('source')['src']])
-            _download_videos(vid_links)
+            self._download_videos(vid_links)
 
 
     def _download_videos(self,vid_links):
