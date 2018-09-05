@@ -47,10 +47,7 @@ class Scraper:
         pass_field.send_keys("Avisek@4326")
         submit_btn.click()
 
-        #Returning Driver for debugging purposes
-        return self.driver
-
-    def _get_all_courses(self):
+        #Save all course pages source
         self._click_more_chevron()
         self._savePageSrc("Home_Page", self.driver.page_source)
 
@@ -66,6 +63,9 @@ class Scraper:
         time.sleep(2)
         self._savePageSrc("Completed_courses_Page", self.driver.page_source)
 
+
+        #Returning Driver for debugging purposes
+        return self.driver
 
 
     def search_available_courses(self):
@@ -97,8 +97,6 @@ class Scraper:
         return course_hrefs
 
 
-
-
     def _savePageSrc(self,pg_name,pg_src):
 
         file_abs_path = os.path.join(self.CURR_PATH,"sources",(pg_name+".html"))
@@ -106,9 +104,6 @@ class Scraper:
             file.write(pg_src)
 
         self.src_dict[pg_name] = file_abs_path
-
-
-
 
 
     def _click_more_chevron(self):
@@ -119,26 +114,23 @@ class Scraper:
                 more_chevron.click()
 
 
-
-
-
     def _get_courses(self,soup,course_hrefs):
 
         tmp_dict = course_hrefs
         section_list = soup.find_all('section', attrs={"class": ["rc-CourseCard", "with-padding"]})
         modified_section_list = soup.find_all('section',attrs={"class":"rc-CourseCard with-padding card-rich-interaction".split()})
 
-        section_list = section_list+modified_section_list
+        section_list = list(set(section_list+modified_section_list))
 
         if len(section_list) == 0: return None
 
         for section in section_list:
 
             check_enrollment = section.find('div',attrs={"class":"rc-CourseEnrollButton"})
-            print(check_enrollment)
-            enroll_text = check_enrollment.find('span').text if check_enrollment!=None else 'pass'
+            #print(check_enrollment)
+            enroll_text = check_enrollment.find('span').text if check_enrollment!=None else 'None'
 
-            if check_enrollment == None or enroll_text != 'Enroll':
+            if enroll_text != 'Enroll':
                 name = section.find('h4', attrs={"class": "headline-1-text"}).text
                 href_link = section.find("a", href=True)['href']
                 tmp_dict[name] = href_link
@@ -146,39 +138,66 @@ class Scraper:
         return tmp_dict
 
 
-
     def _get_weeks(self,course_name):
 
         course_url = self.cera_url + self.course_hrefs[course_name]
         self.driver.get(course_url)
-
-
+        soup = BeautifulSoup(driver.page_source,'html.parser')
+        div_weeks = soup.find('div',attrs={'class':'rc-NavigationDrawer'})
+        weeks = div_weeks.find_all('a',attrs={'class' : "rc-NavigationDrawerLink headline-1-text horizontal-box \
+                                                   rc-WeekNavigationItem".split()})
 
         return len(weeks)
+
 
     def search_videos_per_week(self,week):
 
         lecture_hrefs = {}
 
-        #week_url = course_url+"week"+week
+        self.driver.execute_script('window.scrollTo(0,0)')
+        old_url = self.driver.current_url
+        #week_url = course_url+"/week/"+week
         self.driver.find_element_by_link_text("Week "+str(week)).click()
+
+        while self.driver.current_url == old_url:pass
         soup = BeautifulSoup((self.driver.page_source),'html.parser')
-
         lesson_divs = soup.find_all('div',attrs={'class':'rc-NamedItemList'})
-        lessons = [li for li in [div.find_all('li') for div in lesson_divs if div.find('h4').text != 'Review']]
 
+        lessons = []
+        for div in lesson_divs:
+            if div.find('h4').text != "Review":
+                for li in div.find_all('li'):
+                    lessons.append(li)
+
+        c=1
         for lesson in lessons:
-            lecture_name = lesson.find('div',attrs={'class':'rc-WeekItemName headline-1-text'.split()}).text
-            lecture_link = lesson.find('a',href=True)['href']
-
-            if '/lecture/' in lecture_link:lecture_hrefs[lecture_name] = lecture_link
+            lesson_div = lesson.find('div',attrs={'class':'rc-WeekItemName headline-1-text'.split()})
+            lesson_div.find('span').replace_with('')
+            lecture_link = lesson.find('a')['href']
+            if "/lecture/" in lecture_link:
+                lecture_name = lesson_div.text
+                lecture_hrefs[(str(c)+". "+lecture_name)] = cera_url + lecture_link
+                c+=1
 
         return lecture_hrefs
 
 
+    def _get_videos(self,lecture_hrefs):
+        vid_links = []
+        for key,value in lecture_hrefs.items():
+            self.driver.get(value)
+            soup = BeautifulSoup(self.driver.page_source)
+            vid_links.append([key,soup.find('video').find('source')['src']])
+            _download_videos(vid_links)
 
-    def _get_videos(self,soup):
-        pass
+
+    def _download_videos(self,vid_links):
+        for vid in vid_links:
+            print("Downloading {}".format(vid[0]))
+            with open(str(vid[0])+'.mp4','wb') as f:
+                video = requests.get(vid[1],stream=True)
+                f.write(video.content)
+
 
     def logout(self,close=False):
 
