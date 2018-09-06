@@ -27,15 +27,13 @@ class Scraper:
             self._savePageSrc("Login_Page",self.driver.page_source)
 
 
-    def login(self,debug = False):
+    def login(self):
 
-        if debug == True: return self.driver
         # Switch to the LOG IN tab
-
-        if self.driver.find_element_by_link_text("LOG IN") != None:
-            self.driver.find_element_by_link_text("LOG IN").click()
-        else:
-            self.driver.find_element_by_link_text("Log In").click()
+        try:
+            driver.find_element_by_link_text("LOG IN").click()
+        except:
+            driver.find_element_by_link_text("Log In").click()
 
         #Search for the respective input form and find the fields to enter email and password and the submit button
         form = self.driver.find_element_by_xpath("//form[@name='login']")
@@ -50,19 +48,19 @@ class Scraper:
 
         #Save all course pages source
         self._click_more_chevron()
-        self._savePageSrc("Home_Page", self.driver.page_source)
+        #self._savePageSrc("Home_Page", self.driver.page_source)
 
         self.driver.execute_script("window.scrollTo(0,0)")
         self.driver.find_element_by_link_text('Inactive').click()
         self._click_more_chevron()
         time.sleep(2)
-        self._savePageSrc("Inactive_courses_Page", self.driver.page_source)
+        #self._savePageSrc("Inactive_courses_Page", self.driver.page_source)
 
         self.driver.execute_script("window.scrollTo(0,0)")
         self.driver.find_element_by_link_text('Completed').click()
         self._click_more_chevron()
         time.sleep(2)
-        self._savePageSrc("Completed_courses_Page", self.driver.page_source)
+        #self._savePageSrc("Completed_courses_Page", self.driver.page_source)
 
 
         #Returning Driver for debugging purposes
@@ -98,22 +96,12 @@ class Scraper:
         return course_hrefs
 
 
-    def _savePageSrc(self,pg_name,pg_src):
-
-        file_abs_path = os.path.join(self.CURR_PATH,"sources",(pg_name+".html"))
-        with open(file_abs_path,'w') as file:
-            file.write(pg_src)
-
-        self.src_dict[pg_name] = file_abs_path
-
-
     def _click_more_chevron(self):
         more_chevrons = self.driver.find_elements_by_xpath(
             "//button[@class='nostyle dropdown']")
-        if len(more_chevrons) != 0:
+
             for more_chevron in more_chevrons:
                 more_chevron.click()
-
 
     def _get_courses(self,soup,course_hrefs):
 
@@ -127,21 +115,17 @@ class Scraper:
 
         for section in section_list:
 
-            check_enrollment = section.find('div',attrs={"class":"rc-CourseEnrollButton"})
-            #print(check_enrollment)
-            enroll_text = check_enrollment.find('span').text if check_enrollment!=None else 'None'
-
-            if enroll_text != 'Enroll':
+            if section.find('a',string="Go to Course") !=None:
                 name = section.find('h4', attrs={"class": "headline-1-text"}).text
                 href_link = section.find("a", href=True)['href']
-                tmp_dict[name] = href_link
+                tmp_dict[name] = self.cera_url + href_link
 
         return tmp_dict
 
 
     def _get_weeks(self,course_name):
 
-        course_url = self.cera_url + self.course_hrefs[course_name]
+        course_url = self.course_hrefs[course_name]
         self.driver.get(course_url)
         soup = BeautifulSoup(self.driver.page_source,'html.parser')
         div_weeks = soup.find('div',attrs={'class':'rc-NavigationDrawer'})
@@ -156,29 +140,28 @@ class Scraper:
         lecture_hrefs = {}
 
         self.driver.execute_script('window.scrollTo(0,0)')
-        old_url = self.driver.current_url
         #week_url = course_url+"/week/"+week
         self.driver.find_element_by_link_text("Week "+str(week)).click()
 
-        while self.driver.current_url == old_url:pass
         soup = BeautifulSoup((self.driver.page_source),'html.parser')
         lesson_divs = soup.find_all('div',attrs={'class':'rc-NamedItemList'})
 
-        lessons = []
-        for div in lesson_divs:
+        #lessons = [li for div in lesson_divs if div.find('h4').text != 'Review' for li in div.find_all('li')]
+        '''for div in lesson_divs:
             if div.find('h4').text != "Review":
                 for li in div.find_all('li'):
-                    lessons.append(li)
+                    lessons.append(li)'''
 
-        c=1
-        for lesson in lessons:
+        lecture_no=0
+        for lesson in [li for div in lesson_divs if div.find('h4').text != 'Review' for li in div.find_all('li')]:
             lesson_div = lesson.find('div',attrs={'class':'rc-WeekItemName headline-1-text'.split()})
             lesson_div.find('span').replace_with('')
             lecture_link = lesson.find('a')['href']
             if "/lecture/" in lecture_link:
+                lecture_no+=1
                 lecture_name = lesson_div.text
                 lecture_hrefs[(str(c)+". "+lecture_name)] = self.cera_url + lecture_link
-                c+=1
+
 
         return lecture_hrefs
 
@@ -203,6 +186,18 @@ class Scraper:
             with open(str(vid[0])+'.mp4','wb') as f:
                 video = requests.get(vid[1],stream=True)
                 f.write(video.content)
+
+
+    def _check_for_change(self):
+        pass
+
+    def _savePageSrc(self,pg_name,pg_src):
+
+        file_abs_path = os.path.join(self.CURR_PATH,"sources",(pg_name+".html"))
+        with open(file_abs_path,'w') as file:
+            file.write(pg_src)
+
+        self.src_dict[pg_name] = file_abs_path
 
 
     def logout(self,close=False):
